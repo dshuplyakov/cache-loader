@@ -27,7 +27,7 @@ $(document).ready(function() {
      $("#remove-node").click(function(e) {
             var nodeId = $('#cache-select').val()[0]; 
             if (nodeId == undefined) {
-                alert("Please select node in cache")
+                showMsg("Please select node in cache")
                 return;
             }
 
@@ -36,9 +36,9 @@ $(document).ready(function() {
      });
 
      $("#add-node").click(function(e) {
-            var nodeId = $('#cache-select').val()[0]; 
+            var nodeId = $('#cache-select').val()[0];
             if (nodeId == undefined) {
-                alert("Please select node in cache")
+                showMsg("Please select node in cache")
                 return;
             }
 
@@ -58,16 +58,16 @@ $(document).ready(function() {
      });
 
      $("#edit-node").click(function(e) {
-            var nodeId = $('#cache-select').val()[0]; 
+            var nodeId = $('#cache-select').val()[0];
             if (nodeId == undefined) {
-                alert("Please select root node in cache")
+                showMsg("Please select root node in cache")
                 return;
             }
 
             var selectedNode = nodesInCache[nodeId];
 
             if (nodesInCache[nodeId].status == 'REMOVED') {
-                alert("Editing removed node is denied")
+                showMsg("Editing removed node is denied")
                 return;
             }
 
@@ -162,3 +162,6 @@ function sortNodes(nodesObject) {
     return sorted;
 }
 
+function showMsg(msg) {
+  $( "#tooltip" ).html('<div class="notice info">'+msg+'</p></div>').fadeIn().delay(3000).fadeOut();
+};
