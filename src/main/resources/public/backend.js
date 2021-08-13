@@ -115,22 +115,79 @@ function loadAndRenderDbSelect() {
 }
 
 function renderCacheSelect() {
-    displayNodes($('#cache-select'), nodesInCache)
+    var sortedNodeIds = sortNodeIds(nodesInCache)
+    displayNodes($('#cache-select'), nodesInCache, sortedNodeIds)
 }
-
 
 function renderDbSelect() {
-    displayNodes($('#db-select'), nodesInDb)
+    var orderedNodeIds = sortNodeIds(nodesInDb);
+    displayNodes($('#db-select'), nodesInDb, sortNodeIds(nodesInDb))
 }
 
+function sortNodeIds(nodes) {
+    var nodesArray = $.map(nodes, function(value, index){
+            return [value];
+    });
 
-function displayNodes(el, data) {
-    var sortedNodes = sortNodes(data)
+    var parentIds = nodesArray.map(o => o.parentId)
+    var ids = nodesArray.map(o => o.id)
+    var leafs = ids.diff(parentIds) //get leafs of tree
+
+
+    //build paths from all leafs to root
+    var pathsFromLeafToRoot = [];
+    for (const leafId of leafs){
+        var currentTree = [];
+        buildPathRecursively(nodes, nodes[leafId], currentTree);
+        pathsFromLeafToRoot.push(currentTree);
+    }
+
+    //build global order of node ids
+    var orderedNodeIds = Array.from(pathsFromLeafToRoot[0]);
+    $.each(pathsFromLeafToRoot, function( i, arr ) {
+        if (i>0) {
+            addChainToNodeIdsArray(orderedNodeIds, arr);
+        }
+    });
+
+    return orderedNodeIds
+}
+
+// build path from leaf to root
+function buildPathRecursively(nodes, node, builtPath) {
+    builtPath.push(node.id);
+    if (node.parentId == undefined || nodes[node.parentId] == undefined) {
+        builtPath.reverse();
+        return;
+    } else {
+        buildPathRecursively(nodes, nodes[node.parentId], builtPath)
+    }
+}
+
+function addChainToNodeIdsArray(sortedTree, branch) {
+    var lastIndex = -1;
+    var count = 0;
+    for (const branchId of branch){
+        var index = sortedTree.indexOf(branchId);
+        if (index >= 0) {
+            lastIndex = index;
+            count++;
+        } else {
+            break
+        }
+    }
+
+    var arrForInsert = branch.slice(count, branch.length);
+    sortedTree.insert(lastIndex + 1, arrForInsert);
+}
+
+function displayNodes(el, nodes, orderedNodeIds) {
     el.empty();
-    $.each(sortedNodes, function( i, o ) {
+    $.each(orderedNodeIds, function( i, id ) {
+        var o = nodes[id]
         var option = new Option(BLANK_PREFIX.repeat(o.level) + o.value, o.id);
         if (o.status == 'REMOVED') {
-            option.style="color: gray;";
+                    option.style="color: gray;";
         }
         el.append(option);
     });
@@ -140,28 +197,12 @@ function addToCache(node) {
     nodesInCache[node.id] = node
 }
 
-
-function sortNodes(nodesObject) {
-    var sorted = $.map(nodesObject, function(value, index){
-            return [value];
-    });
-    sorted.sort(function(a,b) {
-          if ( a.level < b.level ){
-            return -1;
-          }
-          if ( a.level > b.level ){
-            return 1;
-          }
-          if (a.level = b.level) {
-              var x = a.value.toLowerCase();
-              var y = b.value.toLowerCase();
-              return x < y ? -1 : x > y ? 1 : 0;
-          }
-          return 0;
-    });
-    return sorted;
-}
-
 function showMsg(msg) {
   $( "#tooltip" ).html('<div class="notice info">'+msg+'</p></div>').fadeIn().delay(3000).fadeOut();
 };
+
+
+//UTILS
+Array.prototype.diff = function(arr2) { return this.filter(x => !arr2.includes(x)); }
+Array.prototype.insert = function (index, items) {     this.splice.apply(this, [index, 0].concat(items)); }
+
