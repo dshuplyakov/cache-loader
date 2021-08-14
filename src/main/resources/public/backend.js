@@ -1,9 +1,13 @@
-const BLANK_PREFIX = " - "
 const BACKEND_URL = "http://localhost:8081/nodes/"
+const NODE_DISPLAY_PREFIX = " - "
 
 let nodesInCache = {};
 let nodesInDb = {}
 let autoIncrementId = 0;
+
+const NODE_REMOVED = 'REMOVED';
+const NODE_CHANGED = 'CHANGED';
+const NODE_NEW = 'NEW';
 
 $(document).ready(function () {
 
@@ -42,7 +46,7 @@ $(document).ready(function () {
         }
 
         $.each(nodeIds, (i, nodeId) => {
-            nodesInCache[nodeId].status = 'REMOVED';
+            nodesInCache[nodeId].status = NODE_REMOVED;
         });
 
         $cache.find('option:selected').css('color', 'gray').prop('selected', false);
@@ -62,7 +66,7 @@ $(document).ready(function () {
             newNode.id = newId;
             newNode.parentId = nodesInCache[nodeId].id;
             newNode.value = nodeName;
-            newNode.status = 'NEW';
+            newNode.status = NODE_NEW;
             nodesInCache[newId] = newNode;
             autoIncrementId++;
             renderCacheSelect();
@@ -78,7 +82,7 @@ $(document).ready(function () {
 
         let selectedNode = nodesInCache[nodeId];
 
-        if (nodesInCache[nodeId].status === 'REMOVED') {
+        if (nodesInCache[nodeId].status === NODE_REMOVED) {
             showMsg("Editing removed node is denied")
             return;
         }
@@ -86,7 +90,7 @@ $(document).ready(function () {
         let nodeName = prompt("Please enter new node name", selectedNode.value);
         if (nodeName != null) {
             selectedNode.value = nodeName;
-            selectedNode.status = 'CHANGED';
+            selectedNode.status = NODE_CHANGED;
             renderCacheSelect();
         }
     });
@@ -211,8 +215,8 @@ function displayNodes(el, nodes, orderedNodeIds) {
     el.empty();
     $.each(orderedNodeIds, function (i, id) {
         let o = nodes[id]
-        let option = new Option(BLANK_PREFIX.repeat(o.level) + o.value, o.id);
-        if (o.status === 'REMOVED') {
+        let option = new Option(NODE_DISPLAY_PREFIX.repeat(o.level) + o.value, o.id);
+        if (o.status === NODE_REMOVED) {
             option.style = "color: gray;";
         }
         el.append(option);
