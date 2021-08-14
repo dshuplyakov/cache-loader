@@ -5,7 +5,7 @@ import io.github.dshuplyakov.dto.CacheNode;
 
 import java.util.List;
 
-public interface DbService {
+public interface NodeService {
      List<CacheNode> loadAll();
 
      CacheNode loadAllById(String id);

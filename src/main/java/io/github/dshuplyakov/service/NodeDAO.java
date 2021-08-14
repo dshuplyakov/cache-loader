@@ -4,6 +4,6 @@ import io.github.dshuplyakov.dto.CacheNode;
 
 import java.util.List;
 
-public interface NodePersistence {
+public interface NodeDAO {
     List<CacheNode> loadAllNodes();
 }

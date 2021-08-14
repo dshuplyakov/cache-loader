@@ -1,7 +1,7 @@
 package io.github.dshuplyakov.service.impl;
 
 import io.github.dshuplyakov.dto.CacheNode;
-import io.github.dshuplyakov.service.NodePersistence;
+import io.github.dshuplyakov.service.NodeDAO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +10,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MemoryNodesStorage implements NodePersistence {
+public class MemoryNodeStorage implements NodeDAO {
 
     public List<CacheNode> loadAllNodes() {
         ArrayList<CacheNode> result = new ArrayList<>();
@@ -30,7 +30,6 @@ public class MemoryNodesStorage implements NodePersistence {
         result.add(new CacheNode("150",null, "Node150"));
         result.add(new CacheNode("201",null, "Node201"));
         result.add(new CacheNode("152","50", "Node152"));
-
         return result;
     }
 }

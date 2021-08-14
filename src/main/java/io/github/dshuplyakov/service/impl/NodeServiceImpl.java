@@ -2,8 +2,8 @@ package io.github.dshuplyakov.service.impl;
 
 import io.github.dshuplyakov.dto.CacheNode;
 import io.github.dshuplyakov.dto.NodeStatus;
-import io.github.dshuplyakov.service.NodePersistence;
-import io.github.dshuplyakov.service.DbService;
+import io.github.dshuplyakov.service.NodeDAO;
+import io.github.dshuplyakov.service.NodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,21 +12,25 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class DbServiceImpl implements DbService {
+public class NodeServiceImpl implements NodeService {
 
-    private final NodePersistence nodePersistence;
+    public static final String TEMP_ID_PREFIX = "T";
+    private final NodeDAO nodeDAO;
     private final Map<String, CacheNode> storage = new HashMap<>();
+    private final Map<String, String> mapTempIds = new HashMap<>();
 
     @PostConstruct
     public void loadNodesFromDB() {
         storage.clear();
-        for (CacheNode cacheNode : nodePersistence.loadAllNodes()) {
+        for (CacheNode cacheNode : nodeDAO.loadAllNodes()) {
             storage.put(cacheNode.getId(), cacheNode);
         }
     }
 
     private String getAutoIncrementId() {
-        return Collections.max(storage.keySet()) + 1;
+        OptionalInt max = storage.keySet().stream().mapToInt(Integer::valueOf).max();
+        int result = max.isPresent() ? max.getAsInt() + 1 : max.getAsInt();
+        return String.valueOf(result);
     }
 
     @Override
@@ -43,7 +47,8 @@ public class DbServiceImpl implements DbService {
     public void save(List<CacheNode> cacheNodes) {
         for (CacheNode cacheNode : cacheNodes) {
             if (NodeStatus.NEW == cacheNode.getStatus()) {
-                cacheNode.setId(getAutoIncrementId());
+                cacheNode.setId(convertTempIdToRealId(cacheNode.getId()));
+                cacheNode.setParentId(convertTempIdToRealId(cacheNode.getParentId()));
                 storage.put(cacheNode.getId(), cacheNode);
             }
 
@@ -54,6 +59,17 @@ public class DbServiceImpl implements DbService {
             if (NodeStatus.REMOVED == cacheNode.getStatus()) {
                 storage.remove(cacheNode.getId());
             }
+        }
+    }
+
+    private String convertTempIdToRealId(String tempId) {
+        if (tempId.contains(TEMP_ID_PREFIX)) {
+            if (!mapTempIds.containsKey(tempId)) {
+                mapTempIds.put(tempId, getAutoIncrementId());
+            }
+            return mapTempIds.get(tempId);
+        } else {
+            return tempId;
         }
     }
 

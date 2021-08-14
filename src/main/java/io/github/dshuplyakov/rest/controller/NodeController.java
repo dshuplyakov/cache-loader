@@ -1,7 +1,7 @@
 package io.github.dshuplyakov.rest.controller;
 
 import io.github.dshuplyakov.dto.CacheNode;
-import io.github.dshuplyakov.service.DbService;
+import io.github.dshuplyakov.service.NodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,29 +11,29 @@ import java.util.List;
 @RequestMapping("/database/nodes")
 
 @RequiredArgsConstructor
-public class DbController {
+public class NodeController {
 
-    private final DbService dbService;
+    private final NodeService nodeService;
 
     @GetMapping(path = "/load")
     public List<CacheNode> load() {
-        return dbService.loadAll();
+        return nodeService.loadAll();
     }
 
     @GetMapping(path = "/get/{id}")
     public CacheNode loadById(@PathVariable String id) {
-        return dbService.loadAllById(id);
+        return nodeService.loadAllById(id);
     }
 
     @PostMapping(path = "/save")
     public String save(@RequestBody List<CacheNode> cacheNodes) {
-        dbService.save(cacheNodes);
+        nodeService.save(cacheNodes);
         return "OK";
     }
 
     @GetMapping(path = "/reset")
     public String reset() {
-        dbService.loadNodesFromDB();
+        nodeService.loadNodesFromDB();
         return "OK";
     }
 
