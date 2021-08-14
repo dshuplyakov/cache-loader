@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/database/nodes")
+@RequestMapping("/nodes")
 
 @RequiredArgsConstructor
 public class NodeController {

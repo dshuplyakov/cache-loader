@@ -1,4 +1,5 @@
 const BLANK_PREFIX = " - "
+const BACKEND_URL = "http://localhost:8081/nodes/"
 
 var nodesInCache = {};
 var nodesInDb = {}
@@ -21,7 +22,7 @@ $(document).ready(function() {
             return;
         }
 
-        $.get("http://localhost:8081/database/nodes/get/" + nodeId).then(
+        $.get(BACKEND_URL + "get/" + nodeId).then(
             function(node) {
                 addToCache(node);
                 renderCacheSelect();
@@ -89,14 +90,14 @@ $(document).ready(function() {
             });
 
             nodesArray = JSON.stringify(nodesArray);
-            $.post( "http://localhost:8081/database/nodes/save", nodesArray)
+            $.post( BACKEND_URL + "save", nodesArray)
                 .done(function( data ) {
                     loadAndRenderDbSelect();
             });
      });
 
      $("#reset").click(function(e) {
-            $.get("http://localhost:8081/database/nodes/reset")
+            $.get(BACKEND_URL + "reset")
                 .done(function( data ) {
                     loadAndRenderDbSelect();
                     nodesInCache = {};
@@ -108,7 +109,7 @@ $(document).ready(function() {
 
 function loadAndRenderDbSelect() {
     $.ajax({
-        url: "http://localhost:8081/database/nodes/load"
+        url: BACKEND_URL + "load"
     }).then(function(data) {
            nodesInDb = {};
            $.each(data, (i, o)=> {
