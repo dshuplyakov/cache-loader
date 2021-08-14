@@ -44,11 +44,10 @@ $(document).ready(function() {
 
             var nodeName = prompt("Please enter node name", "Node");
             if (nodeName != null) {
-                var selectedNodeLevel = nodesInCache[nodeId].level;
                 var newNode = new Object();
                 var newId = "T" + autoIncrementId;
                 newNode.id = newId;
-                newNode.level = selectedNodeLevel + 1;
+                newNode.parentId = nodesInCache[nodeId].id;
                 newNode.value = nodeName;
                 newNode.status = 'NEW';
                 nodesInCache[newId] = newNode;
