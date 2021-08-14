@@ -142,6 +142,8 @@ function sortNodeIds(nodes) {
         pathsFromLeafToRoot.push(currentTree);
     }
 
+    calculateLevelsOfNodes(pathsFromLeafToRoot, nodes);
+
     //build global order of node ids
     var orderedNodeIds = Array.from(pathsFromLeafToRoot[0]);
     $.each(pathsFromLeafToRoot, function( i, arr ) {
@@ -151,6 +153,14 @@ function sortNodeIds(nodes) {
     });
 
     return orderedNodeIds
+}
+
+function calculateLevelsOfNodes(pathsArr, nodes){
+     $.each(pathsArr, function( i, arr ) {
+        $.each(arr, function( i, el ) {
+            nodes[el].level = i;
+        });
+     });
 }
 
 // build path from leaf to root
@@ -198,7 +208,7 @@ function addToCache(node) {
 }
 
 function showMsg(msg) {
-  $( "#tooltip" ).html('<div class="notice info">'+msg+'</p></div>').fadeIn().delay(3000).fadeOut();
+  $( "#tooltip" ).html('<div class="notice info">'+msg+'</p></div>').fadeIn().delay(2000).fadeOut();
 };
 
 
