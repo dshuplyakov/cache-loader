@@ -15,12 +15,17 @@ $(document).ready(function() {
     loadAndRenderDbSelect();
 
     $("#load-selected-node").click(function(e) {
-        var nodeId = $('#db-select').val()[0]; 
+        var nodeId = $('#db-select').val()[0];
+        if (nodeId == undefined) {
+            showMsg("Please select node in DB")
+            return;
+        }
+
         $.get("http://localhost:8081/database/nodes/get/" + nodeId).then(
-          function(node) {
-            addToCache(node);
-            renderCacheSelect();
-          }
+            function(node) {
+                addToCache(node);
+                renderCacheSelect();
+            }
         );
     });
 
@@ -119,8 +124,8 @@ function renderCacheSelect() {
 }
 
 function renderDbSelect() {
-    var orderedNodeIds = sortNodeIds(nodesInDb);
-    displayNodes($('#db-select'), nodesInDb, sortNodeIds(nodesInDb))
+    var sortedNodeIds = sortNodeIds(nodesInDb);
+    displayNodes($('#db-select'), nodesInDb, sortedNodeIds)
 }
 
 function sortNodeIds(nodes) {
@@ -128,10 +133,13 @@ function sortNodeIds(nodes) {
             return [value];
     });
 
+    if (nodesArray.length == 0) {
+        return;
+    }
+
     var parentIds = nodesArray.map(o => o.parentId)
     var ids = nodesArray.map(o => o.id)
     var leafs = ids.diff(parentIds) //get leafs of tree
-
 
     //build paths from all leafs to root
     var pathsFromLeafToRoot = [];
