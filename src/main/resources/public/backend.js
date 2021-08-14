@@ -46,10 +46,9 @@ $(document).ready(function () {
         }
 
         $.each(nodeIds, (i, nodeId) => {
-            nodesInCache[nodeId].status = NODE_REMOVED;
+            removeNestedNodes(nodesInCache, nodeId);
         });
-
-        $cache.find('option:selected').css('color', 'gray').prop('selected', false);
+        renderCacheSelect();
     });
 
     $("#add-node").click(function (e) {
@@ -119,6 +118,47 @@ $(document).ready(function () {
 
 });
 
+function removeNestedNodes(nodes, nodeId) {
+    let pathsFromLeafToRoot = findAllPaths(nodes);
+    $.each(pathsFromLeafToRoot, (i, pathArr) => {
+        let foundNodeIndex = pathArr.indexOf(nodeId);
+        if (foundNodeIndex >= 0) {
+            $.each(pathArr, (i, nodeId) => {
+                if (i >= foundNodeIndex) {
+                    nodes[nodeId].status = NODE_REMOVED;
+                }
+            });
+        }
+    });
+}
+
+/**
+ * Build paths from all leafs to root
+ * return array of arrays with pathes, eg. [[4,12,20], [4,12,50], [32]]
+ */
+
+function findAllPaths(nodes) {
+    let nodesArray = $.map(nodes, function (value, index) {
+        return [value];
+    });
+
+    if (nodesArray.length === 0) {
+        return [];
+    }
+
+    let parentIds = nodesArray.map(o => o.parentId)
+    let ids = nodesArray.map(o => o.id)
+    let leafs = ids.diff(parentIds) //get leafs of tree
+
+    let pathsFromLeafToRoot = [];
+    for (const leafId of leafs) {
+        let currentTree = [];
+        buildPathRecursively(nodes, nodes[leafId], currentTree);
+        pathsFromLeafToRoot.push(currentTree);
+    }
+    return pathsFromLeafToRoot
+}
+
 function loadAndRenderDbSelect() {
     $.ajax({
         url: BACKEND_URL + "load"
@@ -142,24 +182,9 @@ function renderDbSelect() {
 }
 
 function sortNodeIds(nodes) {
-    let nodesArray = $.map(nodes, function (value, index) {
-        return [value];
-    });
-
-    if (nodesArray.length === 0) {
-        return;
-    }
-
-    let parentIds = nodesArray.map(o => o.parentId)
-    let ids = nodesArray.map(o => o.id)
-    let leafs = ids.diff(parentIds) //get leafs of tree
-
-    //build paths from all leafs to root
-    let pathsFromLeafToRoot = [];
-    for (const leafId of leafs) {
-        let currentTree = [];
-        buildPathRecursively(nodes, nodes[leafId], currentTree);
-        pathsFromLeafToRoot.push(currentTree);
+    let pathsFromLeafToRoot = findAllPaths(nodes);
+    if (pathsFromLeafToRoot.length === 0) {
+        return [];
     }
 
     calculateLevelsOfNodes(pathsFromLeafToRoot, nodes);
