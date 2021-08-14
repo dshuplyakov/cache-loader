@@ -29,11 +29,16 @@ $(document).ready(function () {
         $.each(nodeIds, (i, nodeId) => {
             $.get(BACKEND_URL + "get/" + nodeId).then(
                 function (node) {
-                    nodesInCache[node.id] = node
-                    renderCacheSelect();
+                    if (node.status === NODE_REMOVED) {
+                        //deny load to cache removed element
+                    } else {
+                        nodesInCache[node.id] = node
+                        renderCacheSelect();
+                    }
                 }
             );
         });
+        $("#db-select option:selected").prop('selected' , false)
 
     });
 

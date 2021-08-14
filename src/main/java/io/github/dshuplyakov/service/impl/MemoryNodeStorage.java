@@ -14,7 +14,6 @@ public class MemoryNodeStorage implements NodeDAO {
 
     public List<CacheNode> loadAllNodes() {
         ArrayList<CacheNode> result = new ArrayList<>();
-        result.add(new CacheNode("208",null, "Node208"));
         result.add(new CacheNode("0", null, "Node0"));
         result.add(new CacheNode("7","0", "Node7"));
         result.add(new CacheNode("3","7", "Node3"));
@@ -25,10 +24,10 @@ public class MemoryNodeStorage implements NodeDAO {
         result.add(new CacheNode("90","32", "Node90"));
         result.add(new CacheNode("18","90", "Node18"));
         result.add(new CacheNode("4","90", "Node4"));
-        result.add(new CacheNode("50",null, "Node50"));
+        result.add(new CacheNode("50","12", "Node50"));
         result.add(new CacheNode("52","50", "Node52"));
-        result.add(new CacheNode("150",null, "Node150"));
-        result.add(new CacheNode("201",null, "Node201"));
+        result.add(new CacheNode("150","12", "Node150"));
+        result.add(new CacheNode("201","12", "Node201"));
         result.add(new CacheNode("152","50", "Node152"));
         return result;
     }

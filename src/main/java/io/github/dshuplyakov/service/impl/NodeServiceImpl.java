@@ -57,7 +57,7 @@ public class NodeServiceImpl implements NodeService {
             }
 
             if (NodeStatus.REMOVED == cacheNode.getStatus()) {
-                storage.remove(cacheNode.getId());
+                storage.get(cacheNode.getId()).setStatus(NodeStatus.REMOVED);
             }
         }
     }
