@@ -5,125 +5,125 @@ let nodesInCache = {};
 let nodesInDb = {}
 let autoIncrementId = 0;
 
-$(document).ready(function() {
+$(document).ready(function () {
 
     $.ajaxSetup({
-      contentType: "application/json; charset=utf-8"
+        contentType: "application/json; charset=utf-8"
     });
 
-    $( ".notice" ).fadeOut();
+    $(".notice").fadeOut();
 
     loadAndRenderDbSelect();
 
-    $("#load-selected-node").click(function(e) {
+    $("#load-selected-node").click(function (e) {
         let nodeIds = $('#db-select').val();
         if (nodeIds === undefined) {
             showMsg("Please select node in DB")
             return;
         }
 
-        $.each(nodeIds, (i, nodeId)=> {
-             $.get(BACKEND_URL + "get/" + nodeId).then(
-                function(node) {
+        $.each(nodeIds, (i, nodeId) => {
+            $.get(BACKEND_URL + "get/" + nodeId).then(
+                function (node) {
                     addToCache(node);
                     renderCacheSelect();
                 }
-             );
+            );
         });
 
     });
 
-     $("#remove-node").click(function(e) {
-         let $cache = $('#cache-select');
-         let nodeIds = $cache.val();
-         if (nodeIds === undefined) {
+    $("#remove-node").click(function (e) {
+        let $cache = $('#cache-select');
+        let nodeIds = $cache.val();
+        if (nodeIds === undefined) {
             showMsg("Please select node in cache")
             return;
-         }
+        }
 
-         $.each(nodeIds, (i, nodeId)=> {
-             nodesInCache[nodeId].status = 'REMOVED';
-         });
+        $.each(nodeIds, (i, nodeId) => {
+            nodesInCache[nodeId].status = 'REMOVED';
+        });
 
-         $cache.find('option:selected').css('color', 'gray').prop('selected',false);
-     });
+        $cache.find('option:selected').css('color', 'gray').prop('selected', false);
+    });
 
-     $("#add-node").click(function(e) {
-            let nodeId = $('#cache-select').val()[0];
-            if (nodeId === undefined) {
-                showMsg("Please select node in cache")
-                return;
-            }
+    $("#add-node").click(function (e) {
+        let nodeId = $('#cache-select').val()[0];
+        if (nodeId === undefined) {
+            showMsg("Please select node in cache")
+            return;
+        }
 
-            let nodeName = prompt("Please enter node name", "Node");
-            if (nodeName != null) {
-                let newNode = {};
-                let newId = "T" + autoIncrementId;
-                newNode.id = newId;
-                newNode.parentId = nodesInCache[nodeId].id;
-                newNode.value = nodeName;
-                newNode.status = 'NEW';
-                nodesInCache[newId] = newNode;
-                autoIncrementId++;
+        let nodeName = prompt("Please enter node name", "Node");
+        if (nodeName != null) {
+            let newNode = {};
+            let newId = "T" + autoIncrementId;
+            newNode.id = newId;
+            newNode.parentId = nodesInCache[nodeId].id;
+            newNode.value = nodeName;
+            newNode.status = 'NEW';
+            nodesInCache[newId] = newNode;
+            autoIncrementId++;
+            renderCacheSelect();
+        }
+    });
+
+    $("#edit-node").click(function (e) {
+        let nodeId = $('#cache-select').val()[0];
+        if (nodeId === undefined) {
+            showMsg("Please select root node in cache")
+            return;
+        }
+
+        let selectedNode = nodesInCache[nodeId];
+
+        if (nodesInCache[nodeId].status === 'REMOVED') {
+            showMsg("Editing removed node is denied")
+            return;
+        }
+
+        let nodeName = prompt("Please enter new node name", selectedNode.value);
+        if (nodeName != null) {
+            selectedNode.value = nodeName;
+            selectedNode.status = 'CHANGED';
+            renderCacheSelect();
+        }
+    });
+
+    $("#save").click(function (e) {
+        let nodesArray = $.map(nodesInCache, function (value, index) {
+            return [value];
+        });
+
+        $.post(BACKEND_URL + "save", JSON.stringify(nodesArray))
+            .done(function (data) {
+                loadAndRenderDbSelect();
+                $('#cache-select').empty();
+                nodesInCache = {};
+            });
+    });
+
+    $("#reset").click(function (e) {
+        $.get(BACKEND_URL + "reset")
+            .done(function (data) {
+                loadAndRenderDbSelect();
+                nodesInCache = {};
                 renderCacheSelect();
-            }
-     });
-
-     $("#edit-node").click(function(e) {
-            let nodeId = $('#cache-select').val()[0];
-            if (nodeId === undefined) {
-                showMsg("Please select root node in cache")
-                return;
-            }
-
-            let selectedNode = nodesInCache[nodeId];
-
-            if (nodesInCache[nodeId].status === 'REMOVED') {
-                showMsg("Editing removed node is denied")
-                return;
-            }
-
-            let nodeName = prompt("Please enter new node name", selectedNode.value);
-            if (nodeName != null) {
-                selectedNode.value = nodeName;
-                selectedNode.status = 'CHANGED';
-                renderCacheSelect();
-            }
-     });
-
-     $("#save").click(function(e) {
-            let nodesArray = $.map(nodesInCache, function(value, index){
-                    return [value];
             });
-
-            $.post( BACKEND_URL + "save", JSON.stringify(nodesArray))
-                .done(function( data ) {
-                    loadAndRenderDbSelect();
-                    $('#cache-select').empty();
-                    nodesInCache = {};
-            });
-     });
-
-     $("#reset").click(function(e) {
-            $.get(BACKEND_URL + "reset")
-                .done(function( data ) {
-                    loadAndRenderDbSelect();
-                    nodesInCache = {};
-                    renderCacheSelect();
-            });
-     });
+    });
 
 });
 
 function loadAndRenderDbSelect() {
     $.ajax({
         url: BACKEND_URL + "load"
-    }).then(function(data) {
-           nodesInDb = {};
-           $.each(data, (i, o)=> {
-                nodesInDb[o.id] = o;
-             });
-           renderDbSelect();
+    }).then(function (data) {
+        nodesInDb = {};
+        $.each(data, (i, o) => {
+            nodesInDb[o.id] = o;
+        });
+        renderDbSelect();
     });
 }
 
@@ -138,8 +138,8 @@ function renderDbSelect() {
 }
 
 function sortNodeIds(nodes) {
-    let nodesArray = $.map(nodes, function(value, index){
-            return [value];
+    let nodesArray = $.map(nodes, function (value, index) {
+        return [value];
     });
 
     if (nodesArray.length === 0) {
@@ -152,7 +152,7 @@ function sortNodeIds(nodes) {
 
     //build paths from all leafs to root
     let pathsFromLeafToRoot = [];
-    for (const leafId of leafs){
+    for (const leafId of leafs) {
         let currentTree = [];
         buildPathRecursively(nodes, nodes[leafId], currentTree);
         pathsFromLeafToRoot.push(currentTree);
@@ -162,8 +162,8 @@ function sortNodeIds(nodes) {
 
     //build global order of node ids
     let orderedNodeIds = Array.from(pathsFromLeafToRoot[0]);
-    $.each(pathsFromLeafToRoot, function( i, arr ) {
-        if (i>0) {
+    $.each(pathsFromLeafToRoot, function (i, arr) {
+        if (i > 0) {
             addChainToNodeIdsArray(orderedNodeIds, arr);
         }
     });
@@ -171,12 +171,12 @@ function sortNodeIds(nodes) {
     return orderedNodeIds
 }
 
-function calculateLevelsOfNodes(pathsArr, nodes){
-     $.each(pathsArr, function( i, arr ) {
-        $.each(arr, function( i, el ) {
+function calculateLevelsOfNodes(pathsArr, nodes) {
+    $.each(pathsArr, function (i, arr) {
+        $.each(arr, function (i, el) {
             nodes[el].level = i;
         });
-     });
+    });
 }
 
 // build path from leaf to root
@@ -193,7 +193,7 @@ function buildPathRecursively(nodes, node, builtPath) {
 function addChainToNodeIdsArray(sortedTree, branch) {
     let lastIndex = -1;
     let count = 0;
-    for (const branchId of branch){
+    for (const branchId of branch) {
         let index = sortedTree.indexOf(branchId);
         if (index >= 0) {
             lastIndex = index;
@@ -209,11 +209,11 @@ function addChainToNodeIdsArray(sortedTree, branch) {
 
 function displayNodes(el, nodes, orderedNodeIds) {
     el.empty();
-    $.each(orderedNodeIds, function( i, id ) {
+    $.each(orderedNodeIds, function (i, id) {
         let o = nodes[id]
         let option = new Option(BLANK_PREFIX.repeat(o.level) + o.value, o.id);
         if (o.status === 'REMOVED') {
-                    option.style="color: gray;";
+            option.style = "color: gray;";
         }
         el.append(option);
     });
@@ -224,11 +224,15 @@ function addToCache(node) {
 }
 
 function showMsg(msg) {
-  $( "#tooltip" ).html('<div class="notice info">'+msg+'</p></div>').fadeIn().delay(2000).fadeOut();
+    $("#tooltip").html('<div class="notice info">' + msg + '</p></div>').fadeIn().delay(2000).fadeOut();
 };
 
 
 //UTILS
-Array.prototype.diff = function(arr2) { return this.filter(x => !arr2.includes(x)); }
-Array.prototype.insert = function (index, items) {     this.splice.apply(this, [index, 0].concat(items)); }
+Array.prototype.diff = function (arr2) {
+    return this.filter(x => !arr2.includes(x));
+}
+Array.prototype.insert = function (index, items) {
+    this.splice.apply(this, [index, 0].concat(items));
+}
 
