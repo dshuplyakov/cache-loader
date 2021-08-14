@@ -21,7 +21,7 @@ $(document).ready(function () {
 
     $("#load-selected-node").click(function (e) {
         let nodeIds = $('#db-select').val();
-        if (nodeIds === undefined) {
+        if (nodeIds.length === 0) {
             showMsg("Please select node in DB")
             return;
         }
@@ -29,7 +29,7 @@ $(document).ready(function () {
         $.each(nodeIds, (i, nodeId) => {
             $.get(BACKEND_URL + "get/" + nodeId).then(
                 function (node) {
-                    addToCache(node);
+                    nodesInCache[node.id] = node
                     renderCacheSelect();
                 }
             );
@@ -40,7 +40,7 @@ $(document).ready(function () {
     $("#remove-node").click(function (e) {
         let $cache = $('#cache-select');
         let nodeIds = $cache.val();
-        if (nodeIds === undefined) {
+        if (nodeIds.length === 0) {
             showMsg("Please select node in cache")
             return;
         }
@@ -221,10 +221,6 @@ function displayNodes(el, nodes, orderedNodeIds) {
         }
         el.append(option);
     });
-}
-
-function addToCache(node) {
-    nodesInCache[node.id] = node
 }
 
 function showMsg(msg) {
