@@ -15,6 +15,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jetty:2.5.3'
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.10.0.pr3"
 
+    compile 'org.jetbrains:annotations:16.0.2'
     compileOnly "org.projectlombok:lombok:1.18.20"
     testCompileOnly "org.projectlombok:lombok:1.18.20"
     annotationProcessor "org.projectlombok:lombok:1.18.20"

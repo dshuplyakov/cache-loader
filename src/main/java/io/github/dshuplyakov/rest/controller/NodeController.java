@@ -22,7 +22,7 @@ public class NodeController {
 
     @GetMapping(path = "/get/{id}")
     public CacheNode loadById(@PathVariable String id) {
-        return nodeService.loadAllById(id);
+        return nodeService.loadById(id);
     }
 
     @PostMapping(path = "/save")
@@ -36,6 +36,5 @@ public class NodeController {
         nodeService.loadNodesFromDB();
         return "OK";
     }
-
 
 }

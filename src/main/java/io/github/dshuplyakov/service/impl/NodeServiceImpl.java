@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 
 @Service
 @RequiredArgsConstructor
@@ -39,38 +41,123 @@ public class NodeServiceImpl implements NodeService {
     }
 
     @Override
-    public CacheNode loadAllById(String id) {
+    public CacheNode loadById(String id) {
         return storage.get(id);
     }
 
     @Override
-    public void save(List<CacheNode> cacheNodes) {
-        for (CacheNode cacheNode : cacheNodes) {
-            if (NodeStatus.NEW == cacheNode.getStatus()) {
-                cacheNode.setId(convertTempIdToRealId(cacheNode.getId()));
-                cacheNode.setParentId(convertTempIdToRealId(cacheNode.getParentId()));
-                storage.put(cacheNode.getId(), cacheNode);
-            }
+    public void save(@NotNull List<CacheNode> cacheNodes) {
+        addNewNodes(cacheNodes);
+        renameNodes(cacheNodes);
+        removeNodesWithChildren(cacheNodes);
+    }
 
-            if (NodeStatus.CHANGED == cacheNode.getStatus()) {
-                storage.get(cacheNode.getId()).setValue(cacheNode.getValue());
+    private void addNewNodes(@NotNull List<CacheNode> cacheNodes) {
+        cacheNodes.forEach(node -> {
+            if (NodeStatus.NEW == node.getStatus()) {
+                node.setId(convertTempIdToConsistentId(node.getId()));
+                node.setParentId(convertTempIdToConsistentId(node.getParentId()));
+                storage.put(node.getId(), node);
             }
+        });
+    }
 
-            if (NodeStatus.REMOVED == cacheNode.getStatus()) {
-                storage.get(cacheNode.getId()).setStatus(NodeStatus.REMOVED);
+    private void renameNodes(@NotNull List<CacheNode> cacheNodes) {
+        cacheNodes.forEach(node -> {
+            if (NodeStatus.CHANGED == node.getStatus()) {
+                storage.get(node.getId()).setValue(node.getValue());
             }
+        });
+    }
+
+    /**
+     * All new nodes has temporary id with prefix "T" before id, eg. "T1", "T2", "T3"
+     * This function convert temporary id to consistent id, eg "T1" => "201", "T2" => "202"
+     * @param temporaryId - tempopary id
+     * @return - consistent id
+     */
+    private String convertTempIdToConsistentId(@NotNull String temporaryId) {
+        if (temporaryId.contains(TEMP_ID_PREFIX)) {
+            if (!mapTempIds.containsKey(temporaryId)) {
+                mapTempIds.put(temporaryId, getAutoIncrementId());
+            }
+            return mapTempIds.get(temporaryId);
+        } else {
+            return temporaryId;
         }
     }
 
-    private String convertTempIdToRealId(String tempId) {
-        if (tempId.contains(TEMP_ID_PREFIX)) {
-            if (!mapTempIds.containsKey(tempId)) {
-                mapTempIds.put(tempId, getAutoIncrementId());
+    private void removeNodesWithChildren(@NotNull List<CacheNode> cacheNodes) {
+        List<String> removedNodeIds = cacheNodes.stream()
+                .filter(n -> NodeStatus.REMOVED == n.getStatus())
+                .map(CacheNode::getId)
+                .collect(Collectors.toList());
+
+        Set<String> nodeIdsForRemove = findChildrenNodesForRemove(removedNodeIds);
+        nodeIdsForRemove.forEach(nodeId -> storage.get(nodeId).setStatus(NodeStatus.REMOVED));
+    }
+
+    private Set<String> findChildrenNodesForRemove(@NotNull List<String> removedNodeIds) {
+        Map<String, Set<String>> mapIdToChildren = buildMapIdToChildren();
+        return removedNodeIds.stream()
+                .map(nodeId -> findChildrenOfNode(nodeId, mapIdToChildren))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Find all children nodes of passed node
+     * @param removedNodeId
+     * @param mapIdToChildren
+     * @return
+     */
+    private List<String> findChildrenOfNode(@NotNull String removedNodeId,
+                                            @NotNull Map<String, Set<String>> mapIdToChildren) {
+        Queue<String> queue = new LinkedList<>();
+        queue.add(removedNodeId);
+        List<String> result = new ArrayList<>();
+        buildPathFromHeadToLeafs(queue, mapIdToChildren, result);
+        return result;
+    }
+
+    /**
+     * Build map:  node id => array of children
+     * @return
+     */
+    private Map<String, Set<String>> buildMapIdToChildren() {
+        Map<String, Set<String>> result = new HashMap<>();
+        for (CacheNode node : storage.values()) {
+            if (node.getParentId() != null) {
+                if (result.containsKey(node.getParentId())) {
+                    result.get(node.getParentId()).add(node.getId());
+                } else {
+                    Set<String> childrenIds = new HashSet<>();
+                    childrenIds.add(node.getId());
+                    result.putIfAbsent(node.getParentId(), childrenIds);
+                }
             }
-            return mapTempIds.get(tempId);
-        } else {
-            return tempId;
         }
+        return result;
+    }
+
+    /**
+     * Build path from passed node to its leafs
+     * @param queue
+     * @param mapIdToChildren
+     * @param result
+     */
+    private void buildPathFromHeadToLeafs(@NotNull Queue<String> queue, @NotNull Map<String, Set<String>> mapIdToChildren,
+                                          @NotNull List<String> result) {
+        String nodeId = queue.poll();
+        if (nodeId == null) {
+            return;
+        }
+        result.add(nodeId);
+        if (mapIdToChildren.containsKey(nodeId)) {
+            Set<String> nodeIds = mapIdToChildren.get(nodeId);
+            queue.addAll(nodeIds);
+        }
+        buildPathFromHeadToLeafs(queue, mapIdToChildren, result);
     }
 
 }
