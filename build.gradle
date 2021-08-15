@@ -10,6 +10,12 @@ repositories {
     mavenCentral()
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    sourceCompatibility = 11
+    targetCompatibility = 11
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web:2.5.3'
     implementation 'org.springframework.boot:spring-boot-starter-jetty:2.5.3'
