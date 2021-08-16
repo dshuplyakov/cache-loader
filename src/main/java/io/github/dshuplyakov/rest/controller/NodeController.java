@@ -15,17 +15,17 @@ public class NodeController {
 
     private final NodeService nodeService;
 
-    @GetMapping(path = "/load")
+    @GetMapping(path = "/nodes")
     public List<CacheNode> load() {
         return nodeService.loadAll();
     }
 
-    @GetMapping(path = "/get/{id}")
+    @GetMapping(path = "/node/{id}")
     public CacheNode loadById(@PathVariable String id) {
         return nodeService.loadById(id);
     }
 
-    @PostMapping(path = "/save")
+    @PostMapping(path = "/nodes")
     public String save(@RequestBody List<CacheNode> cacheNodes) {
         nodeService.save(cacheNodes);
         return "OK";

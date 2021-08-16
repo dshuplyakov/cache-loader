@@ -27,7 +27,7 @@ $(document).ready(function () {
         }
 
         $.each(nodeIds, (i, nodeId) => {
-            $.get(BACKEND_URL + "get/" + nodeId).then(
+            $.get(BACKEND_URL + "node/" + nodeId).then(
                 function (node) {
                     if (node.status === NODE_REMOVED) {
                         //deny load to cache removed element
@@ -104,7 +104,7 @@ $(document).ready(function () {
             return [value];
         });
 
-        $.post(BACKEND_URL + "save", JSON.stringify(nodesArray))
+        $.post(BACKEND_URL + "node", JSON.stringify(nodesArray))
             .done(function (data) {
                 loadAndRenderDbSelect();
                 $('#cache-select').empty();
@@ -166,7 +166,7 @@ function findAllPaths(nodes) {
 
 function loadAndRenderDbSelect() {
     $.ajax({
-        url: BACKEND_URL + "load"
+        url: BACKEND_URL + "nodes"
     }).then(function (data) {
         nodesInDb = {};
         $.each(data, (i, o) => {
