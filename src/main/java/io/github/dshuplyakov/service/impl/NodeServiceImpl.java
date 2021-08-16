@@ -42,7 +42,19 @@ public class NodeServiceImpl implements NodeService {
 
     @Override
     public CacheNode loadById(String id) {
-        return storage.get(id);
+        CacheNode cacheNode = storage.get(id);
+        CacheNode result = new CacheNode(cacheNode);
+        result.setAncestors(calculateAncestors(result));
+        return result;
+    }
+
+    private List<String> calculateAncestors(CacheNode cacheNode) {
+        List<String> result = new ArrayList<>();
+        while(cacheNode.getParentId() != null) {
+            result.add(cacheNode.getParentId());
+            cacheNode = storage.get(cacheNode.getParentId());
+        }
+        return result;
     }
 
     @Override

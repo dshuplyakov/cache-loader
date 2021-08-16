@@ -29,12 +29,7 @@ $(document).ready(function () {
         $.each(nodeIds, (i, nodeId) => {
             $.get(BACKEND_URL + "node/" + nodeId).then(
                 function (node) {
-                    if (node.status === NODE_REMOVED) {
-                        //deny load to cache removed element
-                    } else {
-                        nodesInCache[node.id] = node
-                        renderCacheSelect();
-                    }
+                    loadNode(node);
                 }
             );
         });
@@ -52,6 +47,7 @@ $(document).ready(function () {
 
         $.each(nodeIds, (i, nodeId) => {
             removeNestedNodes(nodesInCache, nodeId);
+            markNodesAsRemoved(nodeId);
         });
         renderCacheSelect();
     });
@@ -63,7 +59,12 @@ $(document).ready(function () {
             return;
         }
 
-        let nodeName = prompt("Please enter node name", "Node");
+        if ( nodesInCache[nodeId].status === NODE_REMOVED) {
+            showMsg("It is forbidden to add an element to a removed node")
+            return;
+        }
+
+        let nodeName = prompt("Please enter a node name", "Node");
         if (nodeName != null) {
             let newNode = {};
             let newId = "T" + autoIncrementId;
@@ -122,6 +123,43 @@ $(document).ready(function () {
     });
 
 });
+
+function loadNode(node) {
+    if (node.status === NODE_REMOVED) {
+        //deny load to cache removed element
+    } else {
+        if (nodeHasRemovedAncestor(node)) {
+            node.status = NODE_REMOVED;
+        }
+        nodesInCache[node.id] = node
+        renderCacheSelect();
+    }
+}
+
+function markNodesAsRemoved(removedNodeId) {
+    $.each(nodesInCache, (i, node) => {
+        if (node.ancestors.indexOf(removedNodeId) >= 0) {
+            node.status = NODE_REMOVED;
+        }
+    });
+}
+
+function nodeHasRemovedAncestor(node) {
+    if (node.ancestors === null) {
+        return false;
+    }
+
+    let result = false;
+    $.each(node.ancestors, (i, ancestorId) => {
+        if (nodesInCache[ancestorId] !== undefined
+            && nodesInCache[ancestorId].status === NODE_REMOVED) {
+            result = true;
+            return;
+        }
+    });
+
+    return result;
+}
 
 function removeNestedNodes(nodes, nodeId) {
     let pathsFromLeafToRoot = findAllPaths(nodes);
