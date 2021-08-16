@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://localhost:8081/nodes/"
+const BACKEND_URL = "http://localhost:8081/storage/"
 const NODE_DISPLAY_PREFIX = " - "
 
 let nodesInCache = {};
