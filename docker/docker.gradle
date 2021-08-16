@@ -1,0 +1,37 @@
+def dockerTags = (project.properties['docker.tags'] ?: "latest").split(',')
+def dockerUsername = "pjyfiepolqkd"
+def dockerImage = dockerUsername+"/cache-loader"
+
+def loginToDockerRepository(String hostRepository, String user, String password) {
+    println "log in to ${hostRepository}"
+    "docker login ${hostRepository} -u ${user} -p ${password}".execute()
+            .waitForProcessOutput(System.out, System.err)
+}
+
+task loginToNecessaryDockerRepositories {
+    doLast {
+        loginToDockerRepository("", dockerUsername, defaultDockerHubPassword)
+    }
+}
+
+task copyDefaultConfigToDocker(type: Copy) {
+    dependsOn bootJar
+
+    from "${project.buildDir}/resources/main/application.yml"
+    into "${project.buildDir}/libs/conf/"
+}
+
+docker {
+    dependsOn bootJar, loginToNecessaryDockerRepositories, copyDefaultConfigToDocker
+
+    name = "$dockerImage"
+    dockerfile file('docker/Dockerfile')
+    copySpec.with {
+        from("${project.buildDir}/libs") {
+            rename { it.contains(".jar") ? "cache-db-loader.jar" : it }
+            into("data")
+        }
+    }
+    buildArgs(['DISTRIB_DIRECTORY': "data"])
+    tag "1.0.0", "$dockerImage:1.0.0"
+}

@@ -1,10 +1,13 @@
 plugins {
     id 'java'
     id 'org.springframework.boot' version "2.5.3"
+    id 'com.palantir.docker' version "0.25.0"
 }
 
 group 'io.github.dshuplyakov'
 version '1.0.0'
+
+apply from: 'docker/docker.gradle'
 
 repositories {
     mavenCentral()
