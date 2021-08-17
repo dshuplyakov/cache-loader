@@ -106,7 +106,11 @@ public class NodeServiceImpl implements NodeService {
                 .collect(Collectors.toList());
 
         Set<String> nodeIdsForRemove = findChildrenNodesForRemove(removedNodeIds);
-        nodeIdsForRemove.forEach(nodeId -> storage.get(nodeId).setStatus(NodeStatus.REMOVED));
+
+        nodeIdsForRemove
+            .stream()
+            .filter(storage::containsKey)
+            .forEach(nodeId -> storage.get(nodeId).setStatus(NodeStatus.REMOVED));
     }
 
     private Set<String> findChildrenNodesForRemove(@NotNull List<String> removedNodeIds) {

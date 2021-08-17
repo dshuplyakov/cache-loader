@@ -105,7 +105,7 @@ $(document).ready(function () {
             return [value];
         });
 
-        $.post(BACKEND_URL + "node", JSON.stringify(nodesArray))
+        $.post(BACKEND_URL + "nodes", JSON.stringify(nodesArray))
             .done(function (data) {
                 loadAndRenderDbSelect();
                 $('#cache-select').empty();
@@ -138,7 +138,7 @@ function loadNode(node) {
 
 function markNodesAsRemoved(removedNodeId) {
     $.each(nodesInCache, (i, node) => {
-        if (node.ancestors.indexOf(removedNodeId) >= 0) {
+        if (Array.isArray(node.ancestors) && node.ancestors.indexOf(removedNodeId) >= 0) {
             node.status = NODE_REMOVED;
         }
     });
