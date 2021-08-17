@@ -72,6 +72,10 @@ $(document).ready(function () {
             newNode.parentId = nodesInCache[nodeId].id;
             newNode.value = nodeName;
             newNode.status = NODE_NEW;
+
+            let ancestors = nodesInCache[nodeId].ancestors;
+            ancestors.push(nodeId);
+            newNode.ancestors = ancestors;
             nodesInCache[newId] = newNode;
             autoIncrementId++;
             renderCacheSelect();
