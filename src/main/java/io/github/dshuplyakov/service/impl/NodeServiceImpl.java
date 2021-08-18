@@ -84,6 +84,7 @@ public class NodeServiceImpl implements NodeService {
         addNewNodes(cacheNodes);
         renameNodes(cacheNodes);
         removeNodesWithChildren(cacheNodes);
+        cacheStorage.clear();
     }
 
     private void addNewNodes(@NotNull List<CacheNode> cacheNodes) {

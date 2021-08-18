@@ -138,7 +138,9 @@ function loadNode(node) {
 
         //put ancestors to node
         $.each(node.nodesEnrichAncestor, (i, nodeId) => {
-            nodesInCache[nodeId].ancestors.push(node.id);
+            if (nodesInCache[nodeId] !== undefined) {
+                nodesInCache[nodeId].ancestors.push(node.id);
+            }
         })
 
         nodesInCache[node.id] = node
