@@ -15,6 +15,7 @@ public class CacheNode {
     private String value;
     private NodeStatus status;
     private List<String> ancestors;
+    private List<String> nodesEnrichAncestor;
 
     public CacheNode(String id, String parentId, String value) {
         this.id = id;
@@ -28,5 +29,6 @@ public class CacheNode {
         this.value = cacheNode.value;
         this.status = cacheNode.status;
         this.ancestors = cacheNode.ancestors;
+        this.nodesEnrichAncestor = cacheNode.nodesEnrichAncestor;
     }
 }

@@ -135,6 +135,12 @@ function loadNode(node) {
         if (nodeHasRemovedAncestor(node)) {
             node.status = NODE_REMOVED;
         }
+
+        //put ancestors to node
+        $.each(node.nodesEnrichAncestor, (i, nodeId) => {
+            nodesInCache[nodeId].ancestors.push(node.id);
+        })
+
         nodesInCache[node.id] = node
         renderCacheSelect();
     }

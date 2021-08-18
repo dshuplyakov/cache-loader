@@ -20,10 +20,12 @@ public class NodeServiceImpl implements NodeService {
     private final NodeDAO nodeDAO;
     private final Map<String, CacheNode> storage = new HashMap<>();
     private final Map<String, String> mapTempIds = new HashMap<>();
+    private final Set<String> cacheStorage = new HashSet<>();
 
     @PostConstruct
-    public void loadNodesFromDB() {
+    public void reset() {
         storage.clear();
+        cacheStorage.clear();
         for (CacheNode cacheNode : nodeDAO.loadAllNodes()) {
             storage.put(cacheNode.getId(), cacheNode);
         }
@@ -42,10 +44,28 @@ public class NodeServiceImpl implements NodeService {
 
     @Override
     public CacheNode loadById(String id) {
-        CacheNode cacheNode = storage.get(id);
-        CacheNode result = new CacheNode(cacheNode);
-        result.setAncestors(calculateAncestors(result));
-        return result;
+        if (storage.containsKey(id)) {
+            CacheNode cacheNode = new CacheNode(storage.get(id));
+            cacheNode.setAncestors(calculateAncestors(cacheNode));
+            cacheNode.setNodesEnrichAncestor(findNodesForAddingAncestors(cacheNode));
+            cacheStorage.add(id);
+            return cacheNode;
+        }
+
+        return null;
+    }
+
+    /**
+     * Find nodes which we should add ancestor
+     * @param cacheNode
+     * @return
+     */
+    private List<String> findNodesForAddingAncestors(CacheNode cacheNode) {
+        //find all child of these node
+        //if child contains in cacheStorage -> return this child
+        Set<String> childrenNodes = findChildrenNodes(List.of(cacheNode.getId()));
+        childrenNodes.retainAll(cacheStorage);
+        return new ArrayList<>(childrenNodes);
     }
 
     private List<String> calculateAncestors(CacheNode cacheNode) {
@@ -54,6 +74,8 @@ public class NodeServiceImpl implements NodeService {
             result.add(cacheNode.getParentId());
             cacheNode = storage.get(cacheNode.getParentId());
         }
+
+        result.retainAll(cacheStorage);
         return result;
     }
 
@@ -105,7 +127,7 @@ public class NodeServiceImpl implements NodeService {
                 .map(CacheNode::getId)
                 .collect(Collectors.toList());
 
-        Set<String> nodeIdsForRemove = findChildrenNodesForRemove(removedNodeIds);
+        Set<String> nodeIdsForRemove = findChildrenNodes(removedNodeIds);
 
         nodeIdsForRemove
             .stream()
@@ -113,9 +135,9 @@ public class NodeServiceImpl implements NodeService {
             .forEach(nodeId -> storage.get(nodeId).setStatus(NodeStatus.REMOVED));
     }
 
-    private Set<String> findChildrenNodesForRemove(@NotNull List<String> removedNodeIds) {
+    private Set<String> findChildrenNodes(@NotNull List<String> nodeIds) {
         Map<String, Set<String>> mapIdToChildren = buildMapIdToChildren();
-        return removedNodeIds.stream()
+        return nodeIds.stream()
                 .map(nodeId -> findChildrenOfNode(nodeId, mapIdToChildren))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
@@ -123,14 +145,16 @@ public class NodeServiceImpl implements NodeService {
 
     /**
      * Find all children nodes of passed node
-     * @param removedNodeId
+     * @param nodeId
      * @param mapIdToChildren
      * @return
      */
-    private List<String> findChildrenOfNode(@NotNull String removedNodeId,
+    private List<String> findChildrenOfNode(@NotNull String nodeId,
                                             @NotNull Map<String, Set<String>> mapIdToChildren) {
         Queue<String> queue = new LinkedList<>();
-        queue.add(removedNodeId);
+        if (mapIdToChildren.containsKey(nodeId)) {
+            queue.addAll(mapIdToChildren.get(nodeId));
+        }
         List<String> result = new ArrayList<>();
         buildPathFromHeadToLeafs(queue, mapIdToChildren, result);
         return result;

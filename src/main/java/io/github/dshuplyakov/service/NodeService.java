@@ -12,7 +12,7 @@ public interface NodeService {
 
      @Nullable CacheNode loadById(@NotNull String id);
 
-     void loadNodesFromDB();
+     void reset();
 
      void save(@NotNull List<CacheNode> cacheNodes);
 

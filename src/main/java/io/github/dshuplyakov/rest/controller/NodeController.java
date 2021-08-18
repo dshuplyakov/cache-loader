@@ -33,7 +33,7 @@ public class NodeController {
 
     @GetMapping(path = "/reset")
     public String reset() {
-        nodeService.loadNodesFromDB();
+        nodeService.reset();
         return "OK";
     }
 
