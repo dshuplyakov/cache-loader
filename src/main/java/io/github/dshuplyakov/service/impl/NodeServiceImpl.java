@@ -128,6 +128,7 @@ public class NodeServiceImpl implements NodeService {
                 .collect(Collectors.toList());
 
         Set<String> nodeIdsForRemove = findChildrenNodes(removedNodeIds);
+        nodeIdsForRemove.addAll(removedNodeIds);
 
         nodeIdsForRemove
             .stream()
