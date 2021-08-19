@@ -16,10 +16,8 @@ import org.jetbrains.annotations.NotNull;
 @RequiredArgsConstructor
 public class NodeServiceImpl implements NodeService {
 
-    public static final String TEMP_ID_PREFIX = "T";
     private final NodeDAO nodeDAO;
     private final Map<String, CacheNode> storage = new HashMap<>();
-    private final Map<String, String> mapTempIds = new HashMap<>();
     private final Set<String> cacheStorage = new HashSet<>();
 
     @PostConstruct
@@ -29,12 +27,6 @@ public class NodeServiceImpl implements NodeService {
         for (CacheNode cacheNode : nodeDAO.loadAllNodes()) {
             storage.put(cacheNode.getId(), cacheNode);
         }
-    }
-
-    private String getAutoIncrementId() {
-        OptionalInt max = storage.keySet().stream().mapToInt(Integer::valueOf).max();
-        int result = max.isPresent() ? max.getAsInt() + 1 : max.getAsInt();
-        return String.valueOf(result);
     }
 
     @Override
@@ -57,12 +49,14 @@ public class NodeServiceImpl implements NodeService {
 
     /**
      * Find nodes which we should add ancestor
+     *
+     * Algorithm:
+     * find all child of these node
+     * if child contains in cacheStorage -> return this child
      * @param cacheNode
      * @return
      */
     private List<String> findNodesForAddingAncestors(CacheNode cacheNode) {
-        //find all child of these node
-        //if child contains in cacheStorage -> return this child
         Set<String> childrenNodes = findChildrenNodes(List.of(cacheNode.getId()));
         childrenNodes.retainAll(cacheStorage);
         return new ArrayList<>(childrenNodes);
@@ -84,14 +78,11 @@ public class NodeServiceImpl implements NodeService {
         addNewNodes(cacheNodes);
         renameNodes(cacheNodes);
         removeNodesWithChildren(cacheNodes);
-        cacheStorage.clear();
     }
 
     private void addNewNodes(@NotNull List<CacheNode> cacheNodes) {
         cacheNodes.forEach(node -> {
             if (NodeStatus.NEW == node.getStatus()) {
-                node.setId(convertTempIdToConsistentId(node.getId()));
-                node.setParentId(convertTempIdToConsistentId(node.getParentId()));
                 storage.put(node.getId(), node);
             }
         });
@@ -103,23 +94,6 @@ public class NodeServiceImpl implements NodeService {
                 storage.get(node.getId()).setValue(node.getValue());
             }
         });
-    }
-
-    /**
-     * All new nodes has temporary id with prefix "T" before id, eg. "T1", "T2", "T3"
-     * This function convert temporary id to consistent id, eg "T1" => "201", "T2" => "202"
-     * @param temporaryId - tempopary id
-     * @return - consistent id
-     */
-    private String convertTempIdToConsistentId(@NotNull String temporaryId) {
-        if (temporaryId.contains(TEMP_ID_PREFIX)) {
-            if (!mapTempIds.containsKey(temporaryId)) {
-                mapTempIds.put(temporaryId, getAutoIncrementId());
-            }
-            return mapTempIds.get(temporaryId);
-        } else {
-            return temporaryId;
-        }
     }
 
     private void removeNodesWithChildren(@NotNull List<CacheNode> cacheNodes) {

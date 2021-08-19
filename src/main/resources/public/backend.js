@@ -112,8 +112,6 @@ $(document).ready(function () {
         $.post(BACKEND_URL + "nodes", JSON.stringify(nodesArray))
             .done(function (data) {
                 loadAndRenderDbSelect();
-                $('#cache-select').empty();
-                nodesInCache = {};
             });
     });
 
