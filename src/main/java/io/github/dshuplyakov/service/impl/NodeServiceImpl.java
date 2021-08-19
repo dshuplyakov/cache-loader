@@ -82,8 +82,10 @@ public class NodeServiceImpl implements NodeService {
 
     private void addNewNodes(@NotNull List<CacheNode> cacheNodes) {
         cacheNodes.forEach(node -> {
-            if (NodeStatus.NEW == node.getStatus()) {
-                storage.put(node.getId(), node);
+            if (NodeStatus.REMOVED != node.getStatus()) {
+                if (!storage.containsKey(node.getId())) {
+                    storage.put(node.getId(), node);
+                }
             }
         });
     }
